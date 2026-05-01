@@ -11,6 +11,7 @@ class TechFixApp {
         this.initializeAnalytics();
         this.checkAuthentication();
         this.initializeRealTimeUpdates();
+        this.initializeScrollAnimations(); // v1.3: Add scroll animations
     }
 
     initializeEventListeners() {
@@ -650,6 +651,71 @@ class TechFixApp {
         const expires = new Date();
         expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
         document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+    }
+
+    getCookie(name) {
+        const nameEQ = name + "=";
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.indexOf(nameEQ) === 0) {
+                return cookie.substring(nameEQ.length);
+            }
+        }
+        return null;
+    }
+
+    // v1.3: Scroll Animations with Intersection Observer
+    initializeScrollAnimations() {
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-fade-in-up');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        // Observe all cards, stat cards, and service items
+        const elementsToAnimate = document.querySelectorAll(
+            '.card, .stat-card, .service-item, .feature-item, .testimonial-item'
+        );
+
+        elementsToAnimate.forEach(element => {
+            element.style.opacity = '0';
+            observer.observe(element);
+        });
+
+        // Add staggered animation to grid items
+        const gridContainers = document.querySelectorAll(
+            '.services-grid, .features-grid, .dashboard-stats, .testimonials-grid'
+        );
+
+        gridContainers.forEach(container => {
+            const items = container.querySelectorAll(':scope > div');
+            items.forEach((item, index) => {
+                item.style.animationDelay = `${index * 0.1}s`;
+            });
+        });
+    }
+
+    // Animation helper: Add pulse effect to important elements
+    addPulseAnimation(selector) {
+        document.querySelectorAll(selector).forEach(element => {
+            element.classList.add('animate-pulse');
+        });
+    }
+
+    // Animation helper: Add bounce effect
+    addBounceAnimation(selector) {
+        document.querySelectorAll(selector).forEach(element => {
+            element.classList.add('animate-bounce');
+        });
     }
 
     getCookie(name) {
