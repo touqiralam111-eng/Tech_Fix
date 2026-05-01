@@ -1,0 +1,87 @@
+# .gitignore - TechFix Project
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.log
+
+# PHP
+/vendor/
+composer.lock
+.env
+.env.local
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# Build & Temporary files
+node_modules/
+dist/
+build/
+.cache/
+.tmp/
+
+# Upload directories (ignore but keep structure)
+uploads/*
+!uploads/.gitkeep
+!uploads/contacts/.gitkeep
+!uploads/services/.gitkeep
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+
+# Project specific
+config.local.php
+debug.log
+error_log
+*.backup
+temp/
+cache/
+
+# Session files
+*.sess
+sessions/
+
+# NPM & Yarn
+npm-debug.log
+yarn-error.log
+package-lock.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+ENV/
+env/
+
+# Testing
+.phpunit.result.cache
+coverage/
+.coverage
+
+# Documentation build
+docs/_build/
+site/
+
+# Misc
+.DS_Store
+*.pem
+*.key
+*.crt
