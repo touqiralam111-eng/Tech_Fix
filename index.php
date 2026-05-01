@@ -302,6 +302,49 @@ if ($admins_result) {
                     </div>
                 </div>
             </div>
+
+            <!-- Testimonials Section (v1.2) -->
+            <div class="card testimonials-section">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-comment-dots"></i> Client Testimonials</h2>
+                    <p>Hear from our satisfied customers across Surat</p>
+                </div>
+                <div class="testimonials-grid">
+                    <div class="testimonial-item">
+                        <div class="testimonial-stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p class="testimonial-text">"TechFix saved my business! My entire network was down and they had it fixed in just 2 hours. Highly recommended!"</p>
+                        <p class="testimonial-author">- Rajesh Patel, Business Owner</p>
+                    </div>
+                    <div class="testimonial-item">
+                        <div class="testimonial-stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p class="testimonial-text">"Professional service, reasonable prices, and they explain everything clearly. Best tech support in Surat!"</p>
+                        <p class="testimonial-author">- Neha Sharma, Corporate Manager</p>
+                    </div>
+                    <div class="testimonial-item">
+                        <div class="testimonial-stars">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <p class="testimonial-text">"I recovered important data from my crashed hard drive thanks to their data recovery services. Worth every penny!"</p>
+                        <p class="testimonial-author">- Priya Desai, Freelancer</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
