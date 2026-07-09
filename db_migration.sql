@@ -1,5 +1,6 @@
--- Create tables for TechFix on Render
+-- db_migration.sql - PostgreSQL version for Render
 
+-- Create tables
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -58,18 +59,10 @@ CREATE TABLE IF NOT EXISTS user_sessions (
 
 -- Insert default admin user
 INSERT INTO users (username, email, password, user_type) 
-VALUES (
-    'admin',
-    'admin@techfix.com',
-    '$2y$10$YourHashedPasswordHere', -- Use password_hash('admin123', PASSWORD_DEFAULT) to generate
-    'admin'
-) ON CONFLICT (email) DO NOTHING;
+SELECT 'admin', 'admin@techfix.com', '$2y$10$YourHashedPasswordHere', 'admin'
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'admin@techfix.com');
 
 -- Insert default user
 INSERT INTO users (username, email, password, user_type) 
-VALUES (
-    'user1',
-    'user@techfix.com',
-    '$2y$10$YourHashedPasswordHere', -- Use password_hash('user123', PASSWORD_DEFAULT) to generate
-    'user'
-) ON CONFLICT (email) DO NOTHING;
+SELECT 'user1', 'user@techfix.com', '$2y$10$YourHashedPasswordHere', 'user'
+WHERE NOT EXISTS (SELECT 1 FROM users WHERE email = 'user@techfix.com');
