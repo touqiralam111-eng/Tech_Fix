@@ -1,129 +1,73 @@
 <?php
-// config.php - Fixed Version
+// config.php - Render Compatible Version
+
 session_start();
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0); // Don't show errors on live
 
-// Database configuration
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_NAME', 'techfix');
+// Auto-detect environment
+$is_render = isset($_SERVER['RENDER']) || getenv('RENDER') !== false;
+
+if ($is_render) {
+    // Render PostgreSQL configuration
+    $database_url = getenv('DATABASE_URL');
+    
+    if ($database_url) {
+        $db_parts = parse_url($database_url);
+        
+        define('DB_HOST', $db_parts['host']);
+        define('DB_USER', $db_parts['user']);
+        define('DB_PASS', $db_parts['pass']);
+        define('DB_NAME', ltrim($db_parts['path'], '/'));
+        define('DB_PORT', $db_parts['port'] ?? '5432');
+        define('DB_DRIVER', 'pgsql');
+    } else {
+        // Fallback
+        define('DB_HOST', 'localhost');
+        define('DB_USER', 'postgres');
+        define('DB_PASS', '');
+        define('DB_NAME', 'techfix');
+        define('DB_PORT', '5432');
+        define('DB_DRIVER', 'pgsql');
+    }
+} else {
+    // Local development (XAMPP)
+    define('DB_HOST', 'localhost');
+    define('DB_USER', 'root');
+    define('DB_PASS', '');
+    define('DB_NAME', 'techfix');
+    define('DB_PORT', '3306');
+    define('DB_DRIVER', 'mysql');
+}
 
 // Create connection
 try {
-    $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-    
-    if ($conn->connect_error) {
-        // Try to create database if it doesn't exist
-        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS);
+    if (DB_DRIVER === 'pgsql') {
+        // PostgreSQL for Render
+        $conn = new PDO(
+            "pgsql:host=" . DB_HOST . ";dbname=" . DB_NAME,
+            DB_USER,
+            DB_PASS
+        );
+        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    } else {
+        // MySQL for local development
+        $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
+        
         if ($conn->connect_error) {
             throw new Exception("Connection failed: " . $conn->connect_error);
         }
-        $conn->query("CREATE DATABASE IF NOT EXISTS " . DB_NAME);
-        $conn->select_db(DB_NAME);
     }
 } catch (Exception $e) {
-    die("Database error: " . $e->getMessage());
-}
-
-// Create tables
-$tables = [
-    "CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(50) UNIQUE NOT NULL,
-        email VARCHAR(100) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        phone VARCHAR(20),
-        address TEXT,
-        user_type ENUM('user','admin') DEFAULT 'user',
-        profile_image VARCHAR(255),
-        is_active BOOLEAN DEFAULT TRUE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )",
-    
-    "CREATE TABLE IF NOT EXISTS service_requests (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT,
-        service_type VARCHAR(100),
-        description TEXT,
-        urgency ENUM('low','medium','high','critical') DEFAULT 'medium',
-        status ENUM('pending','in_progress','completed','cancelled') DEFAULT 'pending',
-        assigned_admin INT,
-        completion_notes TEXT,
-        preferred_date DATE,
-        budget DECIMAL(10,2),
-        attachment VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )",
-    
-    "CREATE TABLE IF NOT EXISTS contacts (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        email VARCHAR(100) NOT NULL,
-        subject VARCHAR(200),
-        message TEXT NOT NULL,
-        attachment VARCHAR(255),
-        is_read BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )",
-    
-    "CREATE TABLE IF NOT EXISTS site_visits (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        ip_address VARCHAR(45),
-        user_agent TEXT,
-        visit_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        page_visited VARCHAR(255)
-    )",
-    
-    "CREATE TABLE IF NOT EXISTS user_sessions (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT,
-        session_id VARCHAR(255),
-        login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        logout_time TIMESTAMP NULL,
-        ip_address VARCHAR(45),
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )"
-];
-
-foreach ($tables as $sql) {
-    if (!$conn->query($sql)) {
-        // Ignore table creation errors for now
+    if ($is_render) {
+        error_log("Database error: " . $e->getMessage());
+        die("We're experiencing technical difficulties. Please try again later.");
+    } else {
+        die("Database error: " . $e->getMessage());
     }
 }
 
-// Create default admin if doesn't exist
-$check_admin = $conn->query("SELECT id FROM users WHERE user_type='admin' LIMIT 1");
-if ($check_admin->num_rows == 0) {
-    $username = "admin";
-    $email = "touqiralam111@gmail.com";
-    $password = password_hash("admin123", PASSWORD_DEFAULT);
-    
-    $sql = "INSERT IGNORE INTO users (username, email, password, user_type) VALUES (?, ?, ?, 'admin')";
-    $stmt = $conn->prepare($sql);
-    if ($stmt) {
-        $stmt->bind_param("sss", $username, $email, $password);
-        $stmt->execute();
-        $stmt->close();
-    }
-}
-
-// Track site visit
-$ip = $_SERVER['REMOTE_ADDR'];
-$user_agent = $_SERVER['HTTP_USER_AGENT'];
-$page = $_SERVER['PHP_SELF'];
-
-$visit_sql = "INSERT INTO site_visits (ip_address, user_agent, page_visited) VALUES (?, ?, ?)";
-$stmt = $conn->prepare($visit_sql);
-if ($stmt) {
-    $stmt->bind_param("sss", $ip, $user_agent, $page);
-    $stmt->execute();
-    $stmt->close();
-}
-
-// Utility functions
+// Utility functions (Keep these the same)
 function sanitize_input($data) {
     return htmlspecialchars(stripslashes(trim($data)));
 }
@@ -147,27 +91,49 @@ function get_user_id() {
 
 function get_visit_count() {
     global $conn;
-    $result = $conn->query("SELECT COUNT(*) as count FROM site_visits");
-    return $result ? $result->fetch_assoc()['count'] : 0;
+    if (DB_DRIVER === 'pgsql') {
+        $stmt = $conn->query("SELECT COUNT(*) as count FROM site_visits");
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'] ?? 0;
+    } else {
+        $result = $conn->query("SELECT COUNT(*) as count FROM site_visits");
+        return $result ? $result->fetch_assoc()['count'] : 0;
+    }
 }
 
 function get_user_count() {
     global $conn;
-    $result = $conn->query("SELECT COUNT(*) as count FROM users");
-    return $result ? $result->fetch_assoc()['count'] : 0;
+    if (DB_DRIVER === 'pgsql') {
+        $stmt = $conn->query("SELECT COUNT(*) as count FROM users");
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'] ?? 0;
+    } else {
+        $result = $conn->query("SELECT COUNT(*) as count FROM users");
+        return $result ? $result->fetch_assoc()['count'] : 0;
+    }
 }
 
-// Safe query execution
+// Safe query execution (modified for PDO)
 function safe_query($sql, $params = []) {
     global $conn;
-    $stmt = $conn->prepare($sql);
-    if ($stmt && !empty($params)) {
-        $types = str_repeat('s', count($params));
-        $stmt->bind_param($types, ...$params);
+    
+    if (DB_DRIVER === 'pgsql') {
+        $stmt = $conn->prepare($sql);
+        if ($stmt) {
+            $stmt->execute($params);
+            return $stmt;
+        }
+        return false;
+    } else {
+        $stmt = $conn->prepare($sql);
+        if ($stmt && !empty($params)) {
+            $types = str_repeat('s', count($params));
+            $stmt->bind_param($types, ...$params);
+        }
+        if ($stmt && $stmt->execute()) {
+            return $stmt->get_result();
+        }
+        return false;
     }
-    if ($stmt && $stmt->execute()) {
-        return $stmt->get_result();
-    }
-    return false;
 }
 ?>
