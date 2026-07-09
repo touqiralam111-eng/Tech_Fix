@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: techfix
+    env: php
+    buildCommand: |
+      # Copy files to web root
+      mkdir -p /opt/render/project/src
+      cp -r . /opt/render/project/src/
+    startCommand: php -S 0.0.0.0:10000 -t /opt/render/project/src/
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: techfix-db
+          property: connectionString
+      - key: PHP_ENVIRONMENT
+        value: production
+
+  - type: postgresql
+    name: techfix-db
+    plan: free
