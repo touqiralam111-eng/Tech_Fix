@@ -1,0 +1,13 @@
+{
+    "name": "techfix/website",
+    "description": "TechFix Professional IT Solutions",
+    "type": "project",
+    "require": {
+        "php": ">=8.0"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "echo 'TechFix installed successfully!'"
+        ]
+    }
+}
