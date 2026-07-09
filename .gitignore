@@ -1,0 +1,39 @@
+# Environment files
+.env
+*.env
+
+# Upload directories
+uploads/
+uploads/services/
+uploads/profiles/
+uploads/contacts/
+
+# Database files
+*.sql
+*.db
+*.sqlite
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+error_log
+
+# Composer
+vendor/
+composer.lock
+
+# Node modules
+node_modules/
+package-lock.json
+
+# Render files
+render.yaml
