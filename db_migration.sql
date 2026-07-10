@@ -1,6 +1,5 @@
--- db_migration.sql - PostgreSQL version for Render
+-- db_migration.sql - PostgreSQL for VibeNest
 
--- Create tables
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
