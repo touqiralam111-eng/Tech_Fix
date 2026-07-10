@@ -1,33 +1,24 @@
 <?php
-// config.php - Render Compatible Version
+// config.php - VibeNest Compatible Version
 
 session_start();
 error_reporting(E_ALL);
-ini_set('display_errors', 0); // Don't show errors on live
+ini_set('display_errors', 0);
 
 // Auto-detect environment
-$is_render = isset($_SERVER['RENDER']) || getenv('RENDER') !== false;
+$is_vibenest = getenv('VIBENEST_ENVIRONMENT') !== false || getenv('RENDER') !== false;
 
-if ($is_render) {
-    // Render PostgreSQL configuration
+if ($is_vibenest) {
+    // VibeNest/Render PostgreSQL configuration
     $database_url = getenv('DATABASE_URL');
     
     if ($database_url) {
         $db_parts = parse_url($database_url);
-        
         define('DB_HOST', $db_parts['host']);
         define('DB_USER', $db_parts['user']);
         define('DB_PASS', $db_parts['pass']);
         define('DB_NAME', ltrim($db_parts['path'], '/'));
         define('DB_PORT', $db_parts['port'] ?? '5432');
-        define('DB_DRIVER', 'pgsql');
-    } else {
-        // Fallback
-        define('DB_HOST', 'localhost');
-        define('DB_USER', 'postgres');
-        define('DB_PASS', '');
-        define('DB_NAME', 'techfix');
-        define('DB_PORT', '5432');
         define('DB_DRIVER', 'pgsql');
     }
 } else {
@@ -43,7 +34,7 @@ if ($is_render) {
 // Create connection
 try {
     if (DB_DRIVER === 'pgsql') {
-        // PostgreSQL for Render
+        // PostgreSQL for VibeNest/Render
         $conn = new PDO(
             "pgsql:host=" . DB_HOST . ";dbname=" . DB_NAME,
             DB_USER,
@@ -53,13 +44,12 @@ try {
     } else {
         // MySQL for local development
         $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT);
-        
         if ($conn->connect_error) {
             throw new Exception("Connection failed: " . $conn->connect_error);
         }
     }
 } catch (Exception $e) {
-    if ($is_render) {
+    if ($is_vibenest) {
         error_log("Database error: " . $e->getMessage());
         die("We're experiencing technical difficulties. Please try again later.");
     } else {
@@ -67,7 +57,7 @@ try {
     }
 }
 
-// Utility functions (Keep these the same)
+// Your existing utility functions remain the same
 function sanitize_input($data) {
     return htmlspecialchars(stripslashes(trim($data)));
 }
@@ -113,10 +103,8 @@ function get_user_count() {
     }
 }
 
-// Safe query execution (modified for PDO)
 function safe_query($sql, $params = []) {
     global $conn;
-    
     if (DB_DRIVER === 'pgsql') {
         $stmt = $conn->prepare($sql);
         if ($stmt) {
